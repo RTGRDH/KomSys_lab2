@@ -62,9 +62,11 @@ public class GameApp
 	}
     }
     
-    static void udpServer(int port)
+    static void udpServer(int port) throws SocketException
     {
 	// Put your udp server code here
+        
+        DatagramSocket UDPsocket = new DatagramSocket(port);
 	System.out.println("UDP server running at port " + port);
 
     }
