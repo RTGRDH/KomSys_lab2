@@ -1,6 +1,9 @@
 import java.net.*; 
 import java.io.*; 
-
+/**
+ * TCP Server
+ * @author Ernst Reutergårdh <kedre@kth.se>, TIDAA2
+ */
 public class EchoServerSimplified
 { 
     public static void main(String[] args) throws IOException 

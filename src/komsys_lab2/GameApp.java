@@ -1,3 +1,4 @@
+package komsys_lab2;
 import java.util.*;
 import java.net.*; 
 import java.io.*; 
@@ -62,13 +63,27 @@ public class GameApp
 	}
     }
     
-    static void udpServer(int port) throws SocketException
+    static void udpServer(int port) throws SocketException, IOException
     {
 	// Put your udp server code here
         
         DatagramSocket UDPsocket = new DatagramSocket(port);
 	System.out.println("UDP server running at port " + port);
+        while (true) 
+        {
+            DatagramPacket request = new DatagramPacket(new byte[1], 1);
+            UDPsocket.receive(request);
+            
+            String quote = "Test";
+            byte[] buffer = quote.getBytes();
 
+            InetAddress clientAddress = request.getAddress();
+            int clientPort = request.getPort();
+
+            DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
+            UDPsocket.send(response);
+
+        }
     }
 
     static void tcpServer(int port)
@@ -80,8 +95,39 @@ public class GameApp
 
     static void udpClient()
     {	
-	// Put your udp client code here
-	System.out.println("UDP client");
+        System.out.print("UDP client port: ");
+        int port = _nextInt();
+ 
+        try {
+            InetAddress address = InetAddress.getLocalHost();
+            DatagramSocket socket = new DatagramSocket();
+ 
+            while (true) {
+ 
+                DatagramPacket request = new DatagramPacket(new byte[1], 1, address, port);
+                socket.send(request);
+ 
+                byte[] buffer = new byte[512];
+                DatagramPacket response = new DatagramPacket(buffer, buffer.length);
+                socket.receive(response);
+ 
+                String quote = new String(buffer, 0, response.getLength());
+ 
+                System.out.println(quote);
+                System.out.println();
+ 
+                Thread.sleep(10000);
+            }
+ 
+        } catch (SocketTimeoutException ex) {
+            System.out.println("Timeout error: " + ex.getMessage());
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            System.out.println("Client error: " + ex.getMessage());
+            ex.printStackTrace();
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
+        }
 
     }
 

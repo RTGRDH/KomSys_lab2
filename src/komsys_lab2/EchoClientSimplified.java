@@ -1,3 +1,7 @@
+/**
+ * TCP Client
+ */
+package komsys_lab2;
 import java.io.*;
 import java.net.*;
 
