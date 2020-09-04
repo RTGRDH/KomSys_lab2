@@ -1,6 +1,6 @@
 import java.util.*;
 import java.net.*; 
-import java.io.*; 
+import java.io.*;
 
 public class GameApp
 {
@@ -47,7 +47,8 @@ public class GameApp
 	    if(protocol==UDP)
 		udpClient();
 	    else
-		tcpClient();
+                System.out.println("Enter port");
+		tcpClient(_nextInt());
 	}
     }
 
@@ -71,11 +72,57 @@ public class GameApp
 
     }
 
-    static void tcpServer(int port)
+    static void tcpServer(int port) throws IOException
     {
 	// Put your tcp server code here
+	ServerSocket serverSocket = new ServerSocket(port);
+	System.out.println ("Waiting for connection.....");
+	Socket clientSocket = serverSocket.accept(); 
+	System.out.println ("Connection successful");
+	System.out.println ("Waiting for input.....");
+	PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true); 
+	BufferedReader in = new BufferedReader( 
+					       new InputStreamReader( clientSocket.getInputStream())); 
+	
+	String inputLine; 
+	
+        int tal = gissaTalet();
+        
+	while ((inputLine = in.readLine()) != null) 
+        {
+            /*System.out.println ("Server: " + inputLine); 
+            out.println(inputLine); */
+            System.out.println(tal);
+            if (Integer.parseInt(inputLine) == tal){
+                System.out.println("Rätt");
+                out.println("Rätt");
+                break;
+            }
+            else if(Integer.parseInt(inputLine) > tal)
+            {
+                System.out.println("HI");
+                out.println("HI");
+            }else if(Integer.parseInt(inputLine) < tal){
+                System.out.println("LO");
+                out.println("LO");
+            }
+            else if (inputLine.equals("Bye.")){
+                break;
+            }
+        }
+	
+	out.close(); in.close(); clientSocket.close(); serverSocket.close(); 
+        
+        
+        
+        
 	System.out.println("TCP server running at port " + port);
 
+    }
+    
+    static int gissaTalet()
+    {
+        return (int)(100.0 * Math.random());
     }
 
     static void udpClient()
@@ -85,9 +132,33 @@ public class GameApp
 
     }
 
-    static void tcpClient()
+    static void tcpClient(int port) throws IOException
     {
 	// Put your tcp client code here
+        
+        Socket echoSocket = new Socket(InetAddress.getLocalHost(), port);
+	PrintWriter out = new PrintWriter(echoSocket.getOutputStream(), true);
+	BufferedReader in = new BufferedReader(new InputStreamReader(
+                                        echoSocket.getInputStream()));
+
+	BufferedReader stdIn = new BufferedReader(
+                                   new InputStreamReader(System.in));
+	String userInput;
+        String serverInput;
+        System.out.print ("input: ");
+	while ((userInput = stdIn.readLine()) != null) {
+	    out.println(userInput);
+            serverInput = in.readLine();
+	    System.out.println("Server: " + serverInput);
+            System.out.print ("input: ");
+            if(serverInput.equals("Rätt")){
+                break;
+            }
+	}
+
+	out.close(); in.close(); stdIn.close(); echoSocket.close();
+        
+        
 	System.out.print("TCP client.");
 
     }
