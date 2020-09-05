@@ -67,24 +67,50 @@ public class GameApp
     static void udpServer(int port) throws SocketException, IOException
     {
 	// Put your udp server code here
-        
+        int tal = gissaTalet();
+        String answer;
+        boolean flag = true;
         DatagramSocket UDPsocket = new DatagramSocket(port);
 	System.out.println("UDP server running at port " + port);
-        while (true) 
+        System.out.println(tal);//Temp
+        while (flag) 
         {
             DatagramPacket request = new DatagramPacket(new byte[1], 1);
-            UDPsocket.receive(request);
+            UDPsocket.receive(request); //Recieves request from client
             
-            String quote = "Test";
-            byte[] buffer = quote.getBytes();
-
+            //String quote = "Test";
+            //byte[] buffer = quote.getBytes();
+            byte[] buffer = new byte[512];
+            String guess = new String(buffer, 0, request.getLength()); //Something wrong with making byte to string, makes square
+            //System.out.println(guess);
+            //String guess = String.valueOf(tal);
+            if (Integer.parseInt(guess) == tal){ 
+                System.out.println("Rätt");
+                answer = "Rätt";
+                buffer = answer.getBytes();
+                break;
+            }
+            else if(Integer.parseInt(guess) > tal)
+            {
+                System.out.println("HI");
+                answer = "HI";
+                buffer = answer.getBytes();
+            }else if(Integer.parseInt(guess) < tal){
+                System.out.println("LO");
+                answer = "LO";
+                buffer = answer.getBytes();
+            }
+            else if (guess.equals("Bye.")){
+                flag = false;
+                break;
+            }
             InetAddress clientAddress = request.getAddress();
             int clientPort = request.getPort();
-
             DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
-            UDPsocket.send(response);
+            UDPsocket.send(response); //Sends respond to client
 
         }
+        UDPsocket.close();
     }
 
     static void tcpServer(int port) throws IOException
@@ -152,17 +178,21 @@ public class GameApp
             while (true) {
  
                 DatagramPacket request = new DatagramPacket(new byte[1], 1, address, port);
-                socket.send(request);
+                socket.send(request); //Request to server
  
                 byte[] buffer = new byte[512];
                 DatagramPacket response = new DatagramPacket(buffer, buffer.length);
-                socket.receive(response);
- 
+                socket.receive(response); //Response from server
+                
                 String quote = new String(buffer, 0, response.getLength());
  
                 System.out.println(quote);
                 System.out.println();
- 
+                //Sends correctly
+                String test = "7"; 
+                buffer = test.getBytes();
+                DatagramPacket response2 = new DatagramPacket(buffer, buffer.length);
+                socket.send(response2);
                 Thread.sleep(10000);
             }
  
