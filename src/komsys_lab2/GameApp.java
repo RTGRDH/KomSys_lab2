@@ -64,54 +64,74 @@ public class GameApp
 	}
     }
     
-    static void udpServer(int port) throws SocketException, IOException
+    static void udpServer(int port) throws SocketException, IOException 
     {
-	// Put your udp server code here
+        // Put your udp server code here
         int tal = gissaTalet();
         String answer;
         boolean flag = true;
         DatagramSocket UDPsocket = new DatagramSocket(port);
-	System.out.println("UDP server running at port " + port);
+        System.out.println("UDP server running at port " + port);
         System.out.println(tal);//Temp
         while (flag) 
         {
-            DatagramPacket request = new DatagramPacket(new byte[1], 1);
+            byte[] bufferRecieve = new byte[512];
+            byte[] bufferSend = new byte[512];
+            DatagramPacket request = new DatagramPacket(bufferRecieve, bufferRecieve.length);
             UDPsocket.receive(request); //Recieves request from client
-            
-            //String quote = "Test";
-            //byte[] buffer = quote.getBytes();
-            byte[] buffer = new byte[512];
-            String guess = new String(buffer, 0, request.getLength()); //Something wrong with making byte to string, makes square
-            //System.out.println(guess);
-            //String guess = String.valueOf(tal);
-            if (Integer.parseInt(guess) == tal){ 
+
+            String guess = new String(request.getData()).trim();
+            System.out.println(guess);
+            /*
+            if (Integer.valueOf(guess) == tal) {
                 System.out.println("Rätt");
                 answer = "Rätt";
-                buffer = answer.getBytes();
+                bufferSend = answer.getBytes();
+                break;
+            } else if (Integer.valueOf(guess) > tal) {
+                System.out.println("HI");
+                answer = "HI";
+                bufferSend = answer.getBytes();
+            } else if (Integer.valueOf(guess) < tal) {
+                System.out.println("LO");
+                answer = "LO";
+                bufferSend = answer.getBytes();
+            } else if (guess.equals("Bye.")) {
+                flag = false;
                 break;
             }
-            else if(Integer.parseInt(guess) > tal)
+            */
+            if (Integer.parseInt(guess) == tal) 
+            {
+                System.out.println("Rätt");
+                answer = "Rätt";
+                bufferSend = answer.getBytes();
+                break;
+            } else if (Integer.parseInt(guess) > tal) 
             {
                 System.out.println("HI");
                 answer = "HI";
-                buffer = answer.getBytes();
-            }else if(Integer.parseInt(guess) < tal){
+                bufferSend = answer.getBytes();
+            } else if (Integer.parseInt(guess) < tal) 
+            {
                 System.out.println("LO");
                 answer = "LO";
-                buffer = answer.getBytes();
-            }
-            else if (guess.equals("Bye.")){
+                bufferSend = answer.getBytes();
+            } 
+            else if (guess.equals("Bye.")) 
+            {
                 flag = false;
                 break;
             }
             InetAddress clientAddress = request.getAddress();
             int clientPort = request.getPort();
-            DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
+            DatagramPacket response = new DatagramPacket(bufferSend, bufferSend.length, clientAddress, clientPort);
             UDPsocket.send(response); //Sends respond to client
 
         }
         UDPsocket.close();
     }
+
 
     static void tcpServer(int port) throws IOException
     {
@@ -166,43 +186,43 @@ public class GameApp
         return (int)(100.0 * Math.random());
     }
 
-    static void udpClient()
-    {	
+    static void udpClient() {
         System.out.print("UDP client port: ");
         int port = _nextInt();
- 
+
         try {
             InetAddress address = InetAddress.getLocalHost();
             DatagramSocket socket = new DatagramSocket();
- 
+            byte[] bufferSend = new byte[512];
+            byte[] bufferRecieve = new byte[512];
             while (true) {
- 
-                DatagramPacket request = new DatagramPacket(new byte[1], 1, address, port);
-                socket.send(request); //Request to server
- 
-                byte[] buffer = new byte[512];
-                DatagramPacket response = new DatagramPacket(buffer, buffer.length);
-                socket.receive(response); //Response from server
-                
-                String quote = new String(buffer, 0, response.getLength());
- 
-                System.out.println(quote);
-                System.out.println();
-                //Sends correctly
-                String test = "7"; 
-                buffer = test.getBytes();
-                DatagramPacket response2 = new DatagramPacket(buffer, buffer.length);
-                socket.send(response2);
-                Thread.sleep(10000);
+
+                //DatagramPacket request = new DatagramPacket(bufferSend, bufferSend.length, address, port);
+                // socket.send(request); //Request from server
+                // DatagramPacket recievePacket = new DatagramPacket(bufferRecieve, bufferRecieve.length);
+                //socket.receive(recievePacket); //Response from server
+                //String quote = new String(bufferRecieve, 0, recievePacket.getLength());
+                //System.out.println(quote);
+                /**
+                 * Insert user input here!!
+                 */
+                String test = "7";
+                bufferSend = test.getBytes();
+                DatagramPacket sendPacket = new DatagramPacket(bufferSend, bufferSend.length, address, port);
+                socket.send(sendPacket);
+
+                DatagramPacket recievePacket = new DatagramPacket(bufferRecieve, bufferRecieve.length);
+                socket.receive(recievePacket); //Response from server
+                String serverAnswer = new String(recievePacket.getData()).trim();
+                System.out.println("FROM SERVER:" + serverAnswer);
+                //Thread.sleep(10000);
             }
- 
+
         } catch (SocketTimeoutException ex) {
             System.out.println("Timeout error: " + ex.getMessage());
             ex.printStackTrace();
         } catch (IOException ex) {
             System.out.println("Client error: " + ex.getMessage());
-            ex.printStackTrace();
-        } catch (InterruptedException ex) {
             ex.printStackTrace();
         }
 
