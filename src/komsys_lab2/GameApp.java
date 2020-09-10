@@ -84,7 +84,7 @@ public class GameApp
             System.out.println(guess);
             if (guess.equals("Bye.")) 
             {
-                flag = false; //Doesnt work
+                break;
             }
             else if (Integer.parseInt(guess) == tal) 
             {
@@ -107,7 +107,7 @@ public class GameApp
             InetAddress clientAddress = request.getAddress();
             int clientPort = request.getPort();
             DatagramPacket response = new DatagramPacket(bufferSend, bufferSend.length, clientAddress, clientPort);
-            UDPsocket.send(response); //Sends respond to client
+            UDPsocket.send(response); //Sends response to client
 
         }
         UDPsocket.close();
@@ -172,19 +172,23 @@ public class GameApp
         System.out.print("UDP client port: ");
         int port = _nextInt();
         String userInput;
-        System.out.print("Input: ");
         try 
         {
             InetAddress address = InetAddress.getLocalHost();
             DatagramSocket socket = new DatagramSocket();
             byte[] bufferSend = new byte[512];
             byte[] bufferRecieve = new byte[512];
-            while ((userInput = scan.nextLine()) != null) 
+            System.out.print("Input: ");
+            while (true) 
             {
+                userInput = scan.nextLine();
                 bufferSend = userInput.getBytes();
                 DatagramPacket sendPacket = new DatagramPacket(bufferSend, bufferSend.length, address, port);
                 socket.send(sendPacket); //Request to server
-
+                if(userInput.equals("Bye."))
+                {
+                    break; //Doesn't work
+                }
                 DatagramPacket recievePacket = new DatagramPacket(bufferRecieve, bufferRecieve.length);
                 socket.receive(recievePacket); //Response from server
                 String serverAnswer = new String(recievePacket.getData()).trim();
