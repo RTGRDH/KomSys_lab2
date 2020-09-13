@@ -70,47 +70,61 @@ public class GameApp
     {
         // Put your udp server code here
         int tal = gissaTalet();
+        long timeBefore;
+        long timeAfter;
         String answer;
-        boolean flag = true;
         DatagramSocket UDPsocket = new DatagramSocket(port);
         System.out.println("UDP server running at port " + port);
         System.out.println(tal);//Temp
         byte[] bufferRecieve = new byte[512];
         byte[] bufferSend = new byte[512];
-        while (flag) 
+        while (true) 
         {
             DatagramPacket request = new DatagramPacket(bufferRecieve, bufferRecieve.length);
+            timeBefore = System.currentTimeMillis();
             UDPsocket.receive(request); //Recieves request from client
-
+            timeAfter = System.currentTimeMillis();
             String guess = new String(request.getData()).trim();
-            System.out.println(guess);
-            if (guess.equals("Bye.")) 
+            if((timeAfter - timeBefore) > 15)
             {
-                break;
+                System.out.println(guess);
+                if(guess.equals("Hello"))
+                {
+                    answer = "WELCOME";
+                    bufferSend = answer.getBytes();
+                }
+                else if (guess.equals("Bye.")) 
+                {
+                    break;
+                }
+                else if (Integer.parseInt(guess) == tal) 
+                {
+                    System.out.println("Correct");
+                    answer = "Correct";
+                    bufferSend = answer.getBytes();
+                } 
+                else if (Integer.parseInt(guess) > tal) 
+                {
+                    System.out.println("HI");
+                    answer = "HI";
+                    bufferSend = answer.getBytes();
+                } 
+                else if (Integer.parseInt(guess) < tal) 
+                {
+                    System.out.println("LO");
+                    answer = "LO";
+                    bufferSend = answer.getBytes();
+                }
+                InetAddress clientAddress = request.getAddress();
+                int clientPort = request.getPort();
+                DatagramPacket response = new DatagramPacket(bufferSend, bufferSend.length, clientAddress, clientPort);
+                UDPsocket.send(response); //Sends response to client
             }
-            else if (Integer.parseInt(guess) == tal) 
+            else
             {
-                System.out.println("Correct");
-                answer = "Correct";
+                answer = "BUSY";
                 bufferSend = answer.getBytes();
-            } 
-            else if (Integer.parseInt(guess) > tal) 
-            {
-                System.out.println("HI");
-                answer = "HI";
-                bufferSend = answer.getBytes();
-            } 
-            else if (Integer.parseInt(guess) < tal) 
-            {
-                System.out.println("LO");
-                answer = "LO";
-                bufferSend = answer.getBytes();
-            } 
-            InetAddress clientAddress = request.getAddress();
-            int clientPort = request.getPort();
-            DatagramPacket response = new DatagramPacket(bufferSend, bufferSend.length, clientAddress, clientPort);
-            UDPsocket.send(response); //Sends response to client
-
+            }
         }
         UDPsocket.close();
     }
