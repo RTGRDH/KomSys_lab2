@@ -1,3 +1,7 @@
+/**
+ * @author Carl-Bernhard Hallberg och Ernst Reutergårdh, TIDAA3
+ */
+
 package komsys_lab2;
 import java.util.*;
 import java.net.*; 
@@ -49,7 +53,7 @@ public class GameApp
 	{
 	    if(protocol==UDP)
 		udpClient();
-	    else
+            else if(protocol==TCP)
                 System.out.println("Enter port");
 		tcpClient(_nextInt());
 	}
@@ -72,61 +76,126 @@ public class GameApp
         int tal = gissaTalet();
         long timeBefore;
         long timeAfter;
+        long timer2 = 0;
         String answer;
+        int currentClient;
+        int clientPort = 0;
         DatagramSocket UDPsocket = new DatagramSocket(port);
+        DatagramPacket response, request;
+        InetAddress clientAddress = null;
         System.out.println("UDP server running at port " + port);
-        System.out.println(tal);//Temp
         byte[] bufferRecieve = new byte[512];
         byte[] bufferSend = new byte[512];
         while (true) 
         {
-            DatagramPacket request = new DatagramPacket(bufferRecieve, bufferRecieve.length);
-            timeBefore = System.currentTimeMillis();
-            UDPsocket.receive(request); //Recieves request from client
-            timeAfter = System.currentTimeMillis();
-            String guess = new String(request.getData()).trim();
-            if((timeAfter - timeBefore) > 15)
+            try
             {
+                System.out.println("Waiting for client");
+                request = new DatagramPacket(bufferRecieve, bufferRecieve.length);
+                UDPsocket.receive(request); //Recieves request from client
+                clientPort = request.getPort();
+                currentClient = request.getPort();
+                clientAddress = request.getAddress();
+                String guess = new String(request.getData()).trim();
                 System.out.println(guess);
                 if(guess.equals("Hello"))
                 {
                     answer = "WELCOME";
                     bufferSend = answer.getBytes();
+                    System.out.println(tal);//Temp
+                    response = new DatagramPacket(bufferSend, bufferSend.length, clientAddress, clientPort);
+                    UDPsocket.send(response);
+                    while(true)
+                    {
+                        Arrays.fill(bufferSend,(byte)0); //Flush send buffer
+                        Arrays.fill(bufferRecieve,(byte)0); //Flush receive buffer
+                        timeBefore = System.currentTimeMillis();
+                        UDPsocket.receive(request); //Packets for game
+                        timeAfter = System.currentTimeMillis();
+                        long totalTime = timeAfter - timeBefore;
+                        if(request.getPort() != currentClient)
+                        {
+                            timer2 += totalTime;
+                        }
+                        if(request.getPort() == currentClient)
+                        {
+                            if(totalTime + timer2 < 15000)
+                            {
+                                timer2 = 0;
+                                guess = new String(request.getData()).trim();
+                                System.out.println(guess);
+                                if(guess.equals("Bye."))
+                                {
+                                    break; 
+                                }
+                                if (Integer.parseInt(guess) == tal) 
+                                {
+                                    System.out.println("Correct");
+                                    answer = "Correct";
+                                    bufferSend = answer.getBytes();
+                                    response = new DatagramPacket(bufferSend, bufferSend.length, clientAddress, clientPort);
+                                    UDPsocket.send(response);
+                                    break;
+                                } 
+                                else if (Integer.parseInt(guess) > tal) 
+                                {
+                                    System.out.println("HI");
+                                    answer = "HI";
+                                    bufferSend = answer.getBytes();
+                                    response = new DatagramPacket(bufferSend, bufferSend.length, clientAddress, clientPort);
+                                    UDPsocket.send(response);
+                                } 
+                                else if (Integer.parseInt(guess) < tal) 
+                                {
+                                    System.out.println("LO");
+                                    answer = "LO";
+                                    bufferSend = answer.getBytes();
+                                    response = new DatagramPacket(bufferSend, bufferSend.length, clientAddress, clientPort);
+                                    UDPsocket.send(response);
+                                }
+                            }
+                            else
+                            {
+                                System.out.println("Timeout");
+                                answer = "Timeout";
+                                bufferSend = answer.getBytes();
+                                response = new DatagramPacket(bufferSend, bufferSend.length, clientAddress, clientPort);
+                                UDPsocket.send(response);
+                                clientAddress = null; clientPort = 0;
+                                break;
+                            }   
+                        }
+                        else
+                        {
+                            answer = "BUSY";
+                            bufferSend = answer.getBytes();
+                            response = new DatagramPacket(bufferSend, bufferSend.length, request.getAddress(), request.getPort());
+                            UDPsocket.send(response);
+                        }
+                    }
                 }
-                else if (guess.equals("Bye.")) 
-                {
-                    break;
-                }
-                else if (Integer.parseInt(guess) == tal) 
-                {
-                    System.out.println("Correct");
-                    answer = "Correct";
-                    bufferSend = answer.getBytes();
-                } 
-                else if (Integer.parseInt(guess) > tal) 
-                {
-                    System.out.println("HI");
-                    answer = "HI";
-                    bufferSend = answer.getBytes();
-                } 
-                else if (Integer.parseInt(guess) < tal) 
-                {
-                    System.out.println("LO");
-                    answer = "LO";
-                    bufferSend = answer.getBytes();
-                }
-                InetAddress clientAddress = request.getAddress();
-                int clientPort = request.getPort();
-                DatagramPacket response = new DatagramPacket(bufferSend, bufferSend.length, clientAddress, clientPort);
-                UDPsocket.send(response); //Sends response to client
             }
-            else
+            catch(NumberFormatException ex)
             {
-                answer = "BUSY";
-                bufferSend = answer.getBytes();
+                System.out.println(ex);
+                answer = "Annoying Client. Disconnecting.";
+                if(clientAddress != null && clientPort != 0){
+                    bufferSend = answer.getBytes();
+                    response = new DatagramPacket(bufferSend, bufferSend.length, clientAddress, clientPort);
+                    UDPsocket.send(response);
+                }
+            }
+            catch (SocketTimeoutException ex) 
+            {
+                System.out.println("Timeout error: " + ex.getMessage());
+                ex.printStackTrace();
+            } 
+            catch (IOException ex) 
+            {
+                System.out.println("Client error: " + ex.getMessage());
+                ex.printStackTrace();
             }
         }
-        UDPsocket.close();
     }
 
     
@@ -216,7 +285,7 @@ public class GameApp
         return (int)(100.0 * Math.random());
     }
 
-    static void udpClient() 
+    static void udpClient() throws SocketException, IOException 
     {
         System.out.print("UDP client port: ");
         int port = _nextInt();
@@ -227,10 +296,11 @@ public class GameApp
             DatagramSocket socket = new DatagramSocket();
             byte[] bufferSend = new byte[512];
             byte[] bufferRecieve = new byte[512];
-            System.out.print("Input: ");
             while (true) 
             {
+                System.out.print("Input: ");
                 userInput = scan.nextLine();
+                Arrays.fill(bufferSend,(byte)0); //Flush send buffer
                 bufferSend = userInput.getBytes();
                 DatagramPacket sendPacket = new DatagramPacket(bufferSend, bufferSend.length, address, port);
                 socket.send(sendPacket); //Request to server
@@ -238,12 +308,21 @@ public class GameApp
                 {
                     break; //Doesn't work
                 }
+                Arrays.fill(bufferRecieve,(byte)0); //Flush recieve buffer
                 DatagramPacket recievePacket = new DatagramPacket(bufferRecieve, bufferRecieve.length);
                 socket.receive(recievePacket); //Response from server
                 String serverAnswer = new String(recievePacket.getData()).trim();
                 System.out.println("FROM SERVER:" + serverAnswer);
-                System.out.print("Input: ");
+                if(serverAnswer.equals("Correct"))
+                {
+                    //socket.close();   
+                    break;
+                }
+                if(serverAnswer.equals("Timeout")) {
+                    break;
+                }
             }
+            System.out.println("Socket closed");
             socket.close();
         } 
         catch (SocketTimeoutException ex) 
