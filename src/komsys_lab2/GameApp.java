@@ -296,6 +296,7 @@ public class GameApp
             DatagramSocket socket = new DatagramSocket();
             byte[] bufferSend = new byte[512];
             byte[] bufferRecieve = new byte[512];
+            socket.setSoTimeout(5000);
             while (true) 
             {
                 System.out.print("Input: ");
@@ -314,8 +315,7 @@ public class GameApp
                 String serverAnswer = new String(recievePacket.getData()).trim();
                 System.out.println("FROM SERVER:" + serverAnswer);
                 if(serverAnswer.equals("Correct"))
-                {
-                    //socket.close();   
+                { 
                     break;
                 }
                 if(serverAnswer.equals("Timeout")) {
@@ -324,7 +324,7 @@ public class GameApp
             }
             System.out.println("Socket closed");
             socket.close();
-        } 
+        }
         catch (SocketTimeoutException ex) 
         {
             System.out.println("Timeout error: " + ex.getMessage());
