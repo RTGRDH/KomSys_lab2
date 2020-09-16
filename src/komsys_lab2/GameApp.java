@@ -202,8 +202,8 @@ public class GameApp
                         clientSocket.close(); in.close(); out.close();
                     }
                 }
-            }catch(NullPointerException nullp){
-                System.out.println("Nullpointer\n" + nullp);
+            }catch(NullPointerException np){
+                System.out.println("Nullpointer\n" + np);
             }
             catch (IOException ex) {
                 Logger.getLogger(GameApp.class.getName()).log(Level.SEVERE, null, ex);
@@ -266,7 +266,10 @@ public class GameApp
         BufferedReader in = null;
         BufferedReader stdIn = null;
         try{
-            echoSocket = new Socket(InetAddress.getLocalHost(), port);
+            echoSocket = new Socket();
+            int tOut = 5000;
+            echoSocket.connect(new InetSocketAddress(InetAddress.getLocalHost(), port), tOut);
+            echoSocket.setSoTimeout(tOut);
             out = new PrintWriter(echoSocket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(
                                             echoSocket.getInputStream()));
@@ -290,7 +293,13 @@ public class GameApp
             }
             out.close(); in.close(); stdIn.close(); echoSocket.close();
             System.out.print("TCP client.");
-        }catch(NullPointerException nulp){
+        }catch(ConnectException c){
+            System.out.println("No Server Available");
+        }
+        catch(SocketTimeoutException se){
+            System.out.println("TIMEOUT");
+        }
+        catch(NullPointerException nulp){
             System.out.println("Annoying Client");
         }
         catch(SocketException se){
