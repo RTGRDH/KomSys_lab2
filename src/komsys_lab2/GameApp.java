@@ -307,7 +307,7 @@ public class GameApp
                 socket.send(sendPacket); //Request to server
                 if(userInput.equals("Bye."))
                 {
-                    break; //Doesn't work
+                    break;
                 }
                 Arrays.fill(bufferRecieve,(byte)0); //Flush recieve buffer
                 DatagramPacket recievePacket = new DatagramPacket(bufferRecieve, bufferRecieve.length);
@@ -318,7 +318,8 @@ public class GameApp
                 { 
                     break;
                 }
-                if(serverAnswer.equals("Timeout")) {
+                if(recievePacket.equals("Timeout"))
+                {
                     break;
                 }
             }
